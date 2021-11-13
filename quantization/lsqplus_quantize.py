@@ -11,8 +11,6 @@ class ALSQPlus(Function):
     def forward(ctx, weight, alpha, g, Qn, Qp, per_channel, beta):
         # assert alpha > 0, "alpha={}".format(alpha)
         ctx.save_for_backward(weight, alpha, beta)
-        print(alpha)
-        print(beta)
         ctx.other = g, Qn, Qp, per_channel
         if per_channel:
             sizes = weight.size()
@@ -57,7 +55,8 @@ class ALSQPlus(Function):
                 between * Round.apply(q_w) - between * q_w)*grad_weight * g).sum().unsqueeze(dim=0)
             grad_beta = ((smaller + bigger) * grad_weight * g).sum().unsqueeze(dim=0)
         grad_weight = between * grad_weight
-        return grad_weight, grad_alpha, grad_beta, None, None, None, None
+        #返回的梯度要和forward的参数对应起来
+        return grad_weight, grad_alpha,  None, None, None, None, grad_beta
 
 class WLSQPlus(Function):
     @staticmethod
@@ -221,8 +220,8 @@ batch of activations, respectively
                 weight_tmp = weight.detach().contiguous().view(weight.size()[0], -1)
                 mean = torch.mean(weight_tmp, dim=1)
                 std = torch.std(weight_tmp, dim=1)
-                self.s = self.s*0.9 + 0.1*max([torch.abs(mean-3*std), torch.abs(mean + 3*std)])/self.div
-                print(99999, self.s.size())
+                self.s, _ = torch.max(torch.stack([torch.abs(mean-3*std), torch.abs(mean + 3*std)]), dim=0)
+                self.s = self.s/self.div
             else:
                 mean = torch.mean(weight.detach())
                 std = torch.std(weight.detach())
@@ -272,7 +271,6 @@ class QuantConv2d(nn.Conv2d):
 
     def forward(self, input):
         quant_input = self.activation_quantizer(input)
-        # print('input:',input.size(),self.quant_inference)
         if not self.quant_inference:
             quant_weight = self.weight_quantizer(self.weight)
         else:

@@ -37,7 +37,7 @@ def adjust_lr(optimizer, stepiters, epoch):
 
 def trainer():
     config = {'a_bit':8, 'w_bit':8, "all_positive":False, "per_channel":True, 
-              "num_classes":10,"batch_init":2}
+              "num_classes":10,"batch_init":20}
     pretrainedmodel = r''
     scratch = True #从最开始训练，不是finetuning， 若=False就是finetuning
     tim = datetime.datetime.strftime(datetime.datetime.now(),"%Y-%m-%d %H-%M-%S").replace(' ', '_')
@@ -46,17 +46,18 @@ def trainer():
 
     transform = transforms.Compose(
     [transforms.ToTensor(),
+    # transforms.Resize((32, 32)),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
     batch_size = 3
 
     trainset = torchvision.datasets.CIFAR10(root='datas', train=True,
-                                            download=False, transform=transform)
+                                            download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                             shuffle=True, num_workers=2)
 
     testset = torchvision.datasets.CIFAR10(root='datas', train=False,
-                                        download=False, transform=transform)
+                                        download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                             shuffle=False, num_workers=2)
 
@@ -67,18 +68,21 @@ def trainer():
 
     model = models.resnet18(pretrained=True, num_classes=config['num_classes'])
 
-    LSQ=True
+    Floatmodel = True    #QAT or float-32 train
+    LSQplus = True     #LSQ+ or LSQ
 
     #LSQ+
-    if not LSQ:
+    if LSQplus and not Floatmodel:
         lsqplusprepare(model, inplace=True, a_bits=config["a_bit"], w_bits=config["w_bit"],
                 all_positive=config["all_positive"], per_channel=config["per_channel"],
                 batch_init = config["batch_init"])
-    else:
+    elif not LSQplus and not Floatmodel:
         #LSQ
         lsqprepare(model, inplace=True, a_bits=config["a_bit"], w_bits=config["w_bit"],
                 all_positive=config["all_positive"], per_channel=config["per_channel"],
                 batch_init = config["batch_init"])
+    elif Floatmodel:
+        pass
 
     print(model)
     flogs.write(str(model)+'\n')
@@ -138,8 +142,6 @@ def trainer():
         count = 0
         print("length trainloader is: ", len(trainloader))
         for i, (image, label) in enumerate(trainloader):
-            if i==100:
-                break
             stepiters += 1
             if stepiters<alliters:
                 continue
@@ -164,11 +166,11 @@ def trainer():
                         'iteration':i,\
                         'alliters':stepiters,\
                         'nowepoch':epoch}
-            if stepiters%500==0 and count!=1:
-                try:
-                    torch.save(savestate, r'C:\Users\10696\Desktop\yolov3\log\model_{}_{}_{:.3f}_{}.pth'.format(epoch, stepiters, loss.item(),tim))
-                except:
-                    pass
+            # if stepiters%500==0 and count!=1:
+            #     try:
+            #         torch.save(savestate, r'.\log\model_{}_{}_{:.3f}_{}.pth'.format(epoch, stepiters, loss.item(),tim))
+            #     except:
+                    # pass
         print('validation of testes')
         # prepare to count predictions for each class
         correct_pred = {classname: 0 for classname in classes}
@@ -177,6 +179,7 @@ def trainer():
         # again no gradients needed
         with torch.no_grad():
             for data in testloader:
+                count+=1
                 images, labels = data
                 outputs = model(images)
                 _, predictions = torch.max(outputs, 1)
@@ -196,14 +199,13 @@ def trainer():
         # lr_scheduler.step()
         iteration=0
         try:
-            torch.save(savestate, r'.\models\model_{}_{}_{:.3f}_{}.pth'.format(epoch, stepiters, loss.item(),tim))
+            torch.save(savestate, r'.\log\model_{}_{}_{:.3f}_{}.pth'.format(epoch, stepiters, loss.item(),tim))
         except:
             pass
         # evaluate(model, dataloader_test, device = device)
     timeused  = time.time() - start
     print('Training complete in {:.0f}m {:.0f}s'.format(timeused//60, timeused%60))
     flogs.close()
-
 
 if __name__ == '__main__':
     trainer()
