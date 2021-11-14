@@ -45,18 +45,17 @@ def trainer():
     batch_size = 128
     num_epochs = 290
     Floatmodel = True    #QAT or float-32 train
-    LSQplus = True     #LSQ+ or LSQ
-    scratch = False #从最开始训练，不是finetuning， 若=False就是finetuning
+    LSQplus = True       #LSQ+ or LSQ
+    scratch = False       #从最开始训练，不是finetuning， 若=False就是finetuning
     tim = datetime.datetime.strftime(datetime.datetime.now(),"%Y-%m-%d %H-%M-%S").replace(' ', '_')
     logfile = r'log\log_%s.txt'%tim
     flogs = open(logfile, 'w')
 
     transform = transforms.Compose([
-        # transforms.Resize((224, 224)),
         transforms.RandomHorizontalFlip(p=0.5),
-        transforms.ToTensor(),
-        # transforms.Resize((32, 32)),
-        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+        transforms.Resize((32, 32)),
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        transforms.ToTensor()])
 
     trainset = torchvision.datasets.CIFAR10(root='datas', train=True,
                                             download=True, transform=transform)
