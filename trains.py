@@ -19,16 +19,18 @@ import datetime
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 def adjust_lr(optimizer, stepiters, epoch):
-    if stepiters < 300:
-        lr = 0.0001
-    elif stepiters < 2000:
+    # if stepiters < 300: #warmup start
+    #     lr = 0.0001
+    # elif stepiters < 2000:
+    #     lr = 0.001
+    # elif stepiters < 3000:
+    #     lr = 0.001
+    if epoch < 135:
+        lr = 0.1
+    elif epoch < 185:
+        lr = 0.01
+    elif epoch < 290:
         lr = 0.001
-    elif stepiters < 3000:
-        lr = 0.001
-    elif epoch < 330:
-        lr = 0.001
-    elif epoch < 360:
-        lr = 0.0001
     else:
         import sys
         sys.exit(0)
@@ -39,37 +41,38 @@ def trainer():
     config = {'a_bit':8, 'w_bit':8, "all_positive":False, "per_channel":True, 
               "num_classes":10,"batch_init":20}
     pretrainedmodel = r''
-    scratch = True #从最开始训练，不是finetuning， 若=False就是finetuning
+    Resnet_pretrain = True
+    batch_size = 128
+    num_epochs = 290
+    Floatmodel = True    #QAT or float-32 train
+    LSQplus = True     #LSQ+ or LSQ
+    scratch = False #从最开始训练，不是finetuning， 若=False就是finetuning
     tim = datetime.datetime.strftime(datetime.datetime.now(),"%Y-%m-%d %H-%M-%S").replace(' ', '_')
     logfile = r'log\log_%s.txt'%tim
     flogs = open(logfile, 'w')
 
-    transform = transforms.Compose(
-    [transforms.ToTensor(),
-    # transforms.Resize((32, 32)),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-    batch_size = 3
+    transform = transforms.Compose([
+        # transforms.Resize((224, 224)),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.ToTensor(),
+        # transforms.Resize((32, 32)),
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
 
     trainset = torchvision.datasets.CIFAR10(root='datas', train=True,
                                             download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                            shuffle=True, num_workers=2)
+                                            shuffle=True, num_workers=2, drop_last=True)
 
     testset = torchvision.datasets.CIFAR10(root='datas', train=False,
                                         download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
-                                            shuffle=False, num_workers=2)
+                                            shuffle=False, num_workers=2, drop_last=True)
 
     classes = ('plane', 'car', 'bird', 'cat',
             'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-    num_epochs = 361
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    model = models.resnet18(pretrained=True, num_classes=config['num_classes'])
-
-    Floatmodel = True    #QAT or float-32 train
-    LSQplus = True     #LSQ+ or LSQ
+    model = models.resnet18(pretrained = Resnet_pretrain, num_classes=config['num_classes'])
 
     #LSQ+
     if LSQplus and not Floatmodel:
@@ -83,8 +86,8 @@ def trainer():
                 batch_init = config["batch_init"])
     elif Floatmodel:
         pass
-
-    print(model)
+    if not Floatmodel:
+        print(model)
     flogs.write(str(model)+'\n')
     if not os.path.exists(pretrainedmodel):
         print('the pretrainedmodel do not exists %s'%pretrainedmodel)
@@ -133,15 +136,17 @@ def trainer():
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs))
         flogs.write('Epoch {}/{}'.format(epoch, num_epochs)+'\n')
-        print('-'*10)
+        print('-'*100)
         running_loss = 0
         if epoch<nowepoch:
-            stepiters += len(dataloader) 
+            stepiters += len(dataloader)
             continue
         model.train()
         count = 0
         print("length trainloader is: ", len(trainloader))
         for i, (image, label) in enumerate(trainloader):
+            if i%6999==0:
+                time.sleep(30)
             stepiters += 1
             if stepiters<alliters:
                 continue
@@ -159,9 +164,10 @@ def trainer():
             epoch_loss = running_loss / count
             logword = 'epoch: {}, iteration: {}, alliters: {}, lr: {}, loss: {:.3f}, avgloss: {:.3f}'.format(
                 epoch, i+1, stepiters, optimizer.state_dict()['param_groups'][0]['lr'], loss.item(), epoch_loss)
-            print(logword)
-            flogs.write(logword+'\n')
-            flogs.flush()
+            if i%31==0:
+                print(logword)
+                flogs.write(logword+'\n')
+                flogs.flush()
             savestate = {'state_dict':model.state_dict(),\
                         'iteration':i,\
                         'alliters':stepiters,\
@@ -177,31 +183,44 @@ def trainer():
         total_pred = {classname: 0 for classname in classes}
 
         # again no gradients needed
-        with torch.no_grad():
-            for data in testloader:
-                count+=1
-                images, labels = data
-                outputs = model(images)
-                _, predictions = torch.max(outputs, 1)
-                # collect the correct predictions for each class
-                for label, prediction in zip(labels, predictions):
-                    if label == prediction:
-                        correct_pred[classes[label]] += 1
-                    total_pred[classes[label]] += 1
+        if epoch%3==0 and epoch>nowepoch:
+            with torch.no_grad():
+                count = 0
+                print('length of testloader: ', len(testloader))
+                for data in testloader:
+                    count += 1
+                    images, labels = data
+                    outputs = model(images)
+                    # if count==100:
+                    #     break
+                    _, predictions = torch.max(outputs, 1)
+                    # collect the correct predictions for each class
+                    for label, prediction in zip(labels, predictions):
+                        if label == prediction:
+                            correct_pred[classes[label]] += 1
+                        total_pred[classes[label]] += 1
 
 
-        # print accuracy for each class
-        for classname, correct_count in correct_pred.items():
-            accuracy = 100 * float(correct_count) / total_pred[classname]
-            print("Accuracy for class {:5s} is: {:.1f} %".format(classname,
-                                                        accuracy))
+            # print accuracy for each class
+            correctall = 0
+            alltest = 0
+            for classname, correct_count in correct_pred.items():
+                accuracy = 100 * float(correct_count) / total_pred[classname]
+                print("Accuracy for class {:5s} is: {:.1f} %".format(classname,
+                                                            accuracy))
+                correctall += correct_count
+                alltest += total_pred[classname]
+                flogs.write("Accuracy for class {:5s} is: {:.1f} %".format(classname, accuracy)+'\n')
+            flogs.flush()
+            print("Accuracy all is: {:.1f}".format(100 * float(correctall)/alltest))
 
-        # lr_scheduler.step()
-        iteration=0
-        try:
-            torch.save(savestate, r'.\log\model_{}_{}_{:.3f}_{}.pth'.format(epoch, stepiters, loss.item(),tim))
-        except:
-            pass
+            # lr_scheduler.step()
+            iteration=0
+            try:
+                if epoch>nowepoch:
+                    torch.save(savestate, r'.\log\model_{}_{}_{:.3f}_{}.pth'.format(epoch, stepiters, loss.item(),tim))
+            except:
+                pass
         # evaluate(model, dataloader_test, device = device)
     timeused  = time.time() - start
     print('Training complete in {:.0f}m {:.0f}s'.format(timeused//60, timeused%60))

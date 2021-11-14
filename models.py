@@ -66,7 +66,6 @@ class BasicBlock(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
-
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
@@ -265,6 +264,7 @@ def _resnet(
         for key, value in state_dict.items():
             if 'fc' in key:
                 delete.append(key)
+        print('detele: ', delete)
         for key in delete:
             state_dict.pop(key)
         model.load_state_dict(state_dict, strict=False)

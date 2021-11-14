@@ -8,7 +8,7 @@ You should train 32-bit float model firstly, then you can finetune a low bit-wid
 
 Dataset is CIFAR10 and model used is Resnets<br>
 
-
+LEARNED STEP SIZE QUANTIZATION<br>
 LSQ+: Improving low-bit quantization through learnable offsets and better initialization<br>
 
 ### References<br>
