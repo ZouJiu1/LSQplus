@@ -17,8 +17,8 @@ lsqquantize_V2.py: initialize s of activation quantization = 1<br><br>
 
 ## The Train Results 
 | version | weight per_channel | learning rate | A s initial | A beta initial | best epoch | Accuracy | models
-| ------ | --------- | ------ | --------------------------------- | ------ | ------ | ------ | ------ |
-| Float 32bit | - | <=66 0.1<br><=86 0.01<br><=99 0.001<br><=112 0.0001 | - | - | 112 | 92.6 | [download](https://share.weiyun.com/g7P6cL23) |
+| ------ | --------- | ------ | ------ | ------ | ------ | ------ | ------ |
+| Float 32bit | - | <=66 1e-1<br><=86 1e-2<br><=99 1e-3<br><=112 1e-4 | - | - | 112 | 92.6 | [download](https://share.weiyun.com/g7P6cL23) |
 | lsqplus_quantize_V1 | × | <=30 0.1<br><=46 0.01<br><=60 0.001<br><=70 0.0001 | 1 | -1e-9 | 69 | 90.1 | [download](https://share.weiyun.com/HRKnuJ9H) |
 | lsqplu_quantize_V2 | × | <=9 0.1<br><=12 0.01 | - | - | 12 | 91.0 | [download](https://share.weiyun.com/RvrPTeEQ) |
 | lsqplus_quantize_V1 | ✔ |  |  |  |  |  |  | |
@@ -28,7 +28,7 @@ lsqquantize_V2.py: initialize s of activation quantization = 1<br><br>
 | lsqquantize_V1 | ✔ |  |  |  |  |  | |
 | lsqquantize_V2 | ✔ |  |  |  |  |  | |
 <br>
-A represent activation, I use moving average method to initialize s and beta.<br>
+A represent activation, I use moving average method to initialize s and beta.<br><br>
 
 LEARNED STEP SIZE QUANTIZATION<br>
 LSQ+: Improving low-bit quantization through learnable offsets and better initialization<br>
