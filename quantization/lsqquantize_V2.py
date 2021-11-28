@@ -4,7 +4,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Function
-
+'''
+self.s = torch.nn.Parameter(torch.ones(1))  #V2
+激活值量化参数s初始化使用了常数1
+'''
 
 # ********************* quantizers（量化器，量化） *********************
 # 取整(ste)
@@ -67,7 +70,8 @@ class FunLSQ(Function):
         else:
             grad_alpha = ((smaller * Qn + bigger * Qp + 
                 between * Round.apply(q_w) - between * q_w)*grad_weight * g).sum().unsqueeze(dim=0) #?
-        grad_weight = between * grad_weight
+        #在量化区间之外的值都是常数，故导数也是0
+        grad_weight = between * grad_weight  
         return grad_weight, grad_alpha, None, None, None, None
 
 def grad_scale(x, scale):
@@ -96,33 +100,21 @@ class LSQActivationQuantizer(nn.Module):
             # signed weight/activation is quantized to [-2^(b-1), 2^(b-1)-1]
             self.Qn = - 2 ** (self.a_bits - 1)
             self.Qp = 2 ** (self.a_bits - 1) - 1
-        # self.s = torch.nn.Parameter(torch.ones(1))
+        self.s = torch.nn.Parameter(torch.ones(1))  #V2
         self.init_state = 0
 
     # 量化/反量化
     def forward(self, activation):
-        '''
-        For this work, each layer of weights and each layer of activations has a distinct step size, represented
-as an fp32 value, initialized to 2h|v|i/√OP , computed on either the initial weights values or the first
-batch of activations, respectively
-        '''
-        if self.init_state==0:
-            self.s = torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
-            self.init_state += 1
-        elif self.init_state<self.batch_init:
-            self.s = 0.9*self.s + 0.1**torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
-            self.init_state += 1
-        elif self.init_state==self.batch_init:
-            self.s = torch.nn.Parameter(self.s)
-            self.init_state += 1
         if self.a_bits == 32:
             output = activation
         elif self.a_bits == 1:
             print('！Binary quantization is not supported ！')
             assert self.a_bits != 1
         else:
-            g = 1.0/math.sqrt(activation.numel() * self.Qp)
-            q_a = FunLSQ.apply(activation, self.s, g, self.Qn, self.Qp)
+            if self.init_state==0:
+                self.g = 1.0/math.sqrt(activation.numel() * self.Qp)
+                self.init_state += 1
+            q_a = FunLSQ.apply(activation, self.s, self.g, self.Qn, self.Qp)
 
             # alpha = grad_scale(self.s, g)
             # q_a = Round.apply((activation/alpha).clamp(Qn, Qp)) * alpha
@@ -149,6 +141,7 @@ class LSQWeightQuantizer(nn.Module):
     # 量化/反量化
     def forward(self, weight):
         if self.init_state==0:
+            self.g = 1.0/math.sqrt(weight.numel() * self.Qp)
             if self.per_channel:
                 weight_tmp = weight.detach().contiguous().view(weight.size()[0], -1)
                 self.s = torch.mean(torch.abs(weight_tmp), dim=1)*2/(math.sqrt(self.Qp))
@@ -171,8 +164,7 @@ class LSQWeightQuantizer(nn.Module):
             print('！Binary quantization is not supported ！')
             assert self.w_bits != 1
         else:
-            g = 1.0/math.sqrt(weight.numel() * self.Qp)
-            w_q = FunLSQ.apply(weight, self.s, g, self.Qn, self.Qp, self.per_channel)
+            w_q = FunLSQ.apply(weight, self.s, self.g, self.Qn, self.Qp, self.per_channel)
 
             # alpha = grad_scale(self.s, g)
             # w_q = Round.apply((weight/alpha).clamp(Qn, Qp)) * alpha

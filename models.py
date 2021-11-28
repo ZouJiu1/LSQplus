@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 import torch.nn as nn
+from torch.nn import functional as F
 from torch.hub import load_state_dict_from_url
 from typing import Type, Any, Callable, Union, List, Optional
 
@@ -169,7 +170,7 @@ class ResNet(nn.Module):
                              "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
+        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, stride=1, padding=1,
                                bias=False)
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
@@ -181,7 +182,8 @@ class ResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[1])
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.poolavg = nn.AvgPool2d(4)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
@@ -231,15 +233,18 @@ class ResNet(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
-        x = self.maxpool(x)
+        # x = self.maxpool(x)
 
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
 
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
+        # x = self.avgpool(x)
+        # x = torch.flatten(x, 1)
+
+        x = self.poolavg(x)
+        x = x.view(x.size()[0], -1)
         x = self.fc(x)
 
         return x
@@ -257,17 +262,17 @@ def _resnet(
     **kwargs: Any
 ) -> ResNet:
     model = ResNet(block, layers, **kwargs)
-    if pretrained:
-        state_dict = load_state_dict_from_url(model_urls[arch],
-                                              progress=progress)
-        delete = []
-        for key, value in state_dict.items():
-            if 'fc' in key:
-                delete.append(key)
-        print('detele: ', delete)
-        for key in delete:
-            state_dict.pop(key)
-        model.load_state_dict(state_dict, strict=False)
+    # if pretrained:
+    #     state_dict = load_state_dict_from_url(model_urls[arch],
+    #                                           progress=progress)
+    #     delete = []
+    #     for key, value in state_dict.items():
+    #         if 'fc' in key:
+    #             delete.append(key)
+    #     print('detele: ', delete)
+    #     for key in delete:
+    #         state_dict.pop(key)
+    #     model.load_state_dict(state_dict, strict=False)
     return model
 
 

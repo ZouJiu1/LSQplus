@@ -12,8 +12,11 @@ import torchvision.transforms as transforms
 from torch.utils.data import Dataset, DataLoader
 # from load_datas import TF, trainDataset, collate_fn
 import models #, resnet50
-from quantization.lsqquantize import prepare as lsqprepare
-from quantization.lsqplus_quantize import prepare as lsqplusprepare
+from quantization.lsqquantize_V1 import prepare as lsqprepareV1
+from quantization.lsqquantize_V2 import prepare as lsqprepareV2
+from quantization.lsqplus_quantize_V1 import prepare as lsqplusprepareV1
+from quantization.lsqplus_quantize_V2 import prepare as lsqplusprepareV2
+from quantization.lsqplus_quantize_V1 import update_LSQplus_activation_Scalebeta
 import torch.optim as optim
 import datetime
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
@@ -34,7 +37,7 @@ def adjust_lr(optimizer, stepiters, epoch):
 def evaluate():
     config = {'a_bit':8, 'w_bit':8, "all_positive":False, "per_channel":True, 
               "num_classes":10,"batch_init":20}
-    pretrainedmodel = r''
+    pretrainedmodel = r'C:\Users\10696\Desktop\QAT\lsq+\log\model_108_42510_0.003_92.528_2021-11-27_17-49-47.pth'
     Resnet_pretrain = False #test
     batch_size = 128
     num_epochs = 290
@@ -43,15 +46,15 @@ def evaluate():
     scratch = True #从最开始训练，不是finetuning， 若=False就是finetuning
     tim = datetime.datetime.strftime(datetime.datetime.now(),"%Y-%m-%d %H-%M-%S").replace(' ', '_')
 
-    transform = transforms.Compose([
-        transforms.Resize((32, 32)),
-        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-        transforms.ToTensor()])
+    test_transform = transforms.Compose([
+        # transforms.Resize((32, 32)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.201))])
 
     batch_size = 128 #Accuracy all is: 73.4
 
     testset = torchvision.datasets.CIFAR10(root='datas', train=False,
-                                        download=True, transform=transform)
+                                        download=True, transform=test_transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                             shuffle=False, num_workers=2, drop_last=True)
 
@@ -106,10 +109,13 @@ def evaluate():
     correct_pred = {classname: 0 for classname in classes}
     total_pred = {classname: 0 for classname in classes}
 
+    model.eval()
     # again no gradients needed
     with torch.no_grad():
         for data in testloader:
             images, labels = data
+            images = images.to(device)
+            labels = labels.to(device)
             outputs = model(images)
             _, predictions = torch.max(outputs, 1)
             # collect the correct predictions for each class
