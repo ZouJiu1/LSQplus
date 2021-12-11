@@ -22,11 +22,11 @@ lsqquantize_V2.py: initialize s of activation quantization = 1<br><br>
 | Float 32bit | - | <=66 0.1<br><=86 0.01<br><=99 0.001<br><=112 0.0001 | - | - | 112 | 92.6 | [download](https://share.weiyun.com/g7P6cL23) |
 | lsqplus_quantize_V1 | × | <=30 0.1<br><=46 0.01<br><=60 0.001<br><=70 0.0001 | 1 | -1e-9 | 69 | 90.1 | [download](https://share.weiyun.com/HRKnuJ9H) |
 | lsqplus_quantize_V2 | × | <=9 0.1<br><=12 0.01 | - | - | 12 | 91.0 | [download](https://share.weiyun.com/RvrPTeEQ) |
-| lsqplus_quantize_V1 | ✔ | working | to | imporve | 219 | 86 | [download](https://share.weiyun.com/oETxlkYc) |
+| lsqplus_quantize_V1 | ✔ | working | to | imporve | - | - | [download](https://share.weiyun.com/oETxlkYc) |
 | lsqplus_quantize_V2 | ✔ | <=9 0.1<br><=21 0.01<br><=33 0.001<br><=46 0.0001 | - | - | 33 | 91.46 | [download](https://share.weiyun.com/ZUTnyZJd) |
-| lsqquantize_V1 | × | working | to | imporve | 189 | 88.1 | [download](https://share.weiyun.com/FOiQJ6Xj) |
+| lsqquantize_V1 | × | working | to | imporve | - | - | [download](https://share.weiyun.com/FOiQJ6Xj) |
 | lsqquantize_V2 | × | <=31 0.1<br><=61 0.01<br><=81 0.001<br><100 0.0001 | - | - | 72 | 91.76 | [download](https://share.weiyun.com/4ANtOj2G) |
-| lsqquantize_V1 | ✔ | working | to | imporve | 226 | 88.2 | [download](https://share.weiyun.com/scyVhAzN) |
+| lsqquantize_V1 | ✔ | working | to | imporve | - | - | [download](https://share.weiyun.com/scyVhAzN) |
 | lsqquantize_V2 | ✔ | <=31 0.1<br><=61 0.01<br><=81 0.001<br><100 0.0001 | - | - | 99 | 91.37 | [download](https://share.weiyun.com/01uXhQGw) |
 <br>
 A represent activation, I use moving average method to initialize s and beta.<br><br>
