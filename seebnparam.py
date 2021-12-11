@@ -19,6 +19,7 @@ from quantization.lsqplus_quantize_V2 import prepare as lsqplusprepareV2
 from quantization.lsqplus_quantize_V1 import update_LSQplus_activation_Scalebeta
 import torch.optim as optim
 import datetime
+import matplotlib.pyplot as plt
 # os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 def adjust_lr(optimizer, stepiters, epoch):
@@ -42,16 +43,16 @@ def adjust_lr(optimizer, stepiters, epoch):
 
 def trainer():
     #batch_init 使用预训练模型对量化参数进行初始化的iters or steps
-    config = {'a_bit':8, 'w_bit':8, "all_positive":False, "per_channel":False, 
+    config = {'a_bit':8, 'w_bit':8, "all_positive":False, "per_channel":True, 
               "num_classes":10,"batch_init":20}
     pretrainedmodel = r'C:\Users\10696\Desktop\QAT\lsq+\log\model_108_42510_0.003_92.528_2021-11-27_17-49-47.pth'
     # Resnet_pretrain = False
     batch_size = 128
     num_epochs = 112
-    Floatmodel = False    #QAT or float-32 train   False or True
-    LSQplus = True       #LSQ+ or LSQ    True or False
-    version = 'V2'
-    scratch = True       #从最开始训练，不是finetuning， 若=False就是finetuning
+    Floatmodel = True    #QAT or float-32 train   False or True
+    LSQplus = False       #LSQ+ or LSQ    True or False
+    version = 'V1'
+    scratch = False       #从最开始训练，不是finetuning， 若=False就是finetuning
     showstep = 31
     #LSQPlusActivationQuantizer里的self.beta初始值要关注
     plusV1_inititers = 30 #update激活层的量化参数s和beta
@@ -174,129 +175,103 @@ def trainer():
         alliters = 0
         nowepoch = 0
     model = model.to(device)
-    # print(torch.__version__)
-    time.sleep(3)
-    adam = False
-    lr = 0.001 # initial learning rate (SGD=1E-2, Adam=1E-3)
-    momnetum=0.9
-    params = [p for p in model.parameters() if p.requires_grad]
-    # if adam:
-    #     optimizer = optim.Adam(params, lr=lr, betas=(momnetum, 0.999))  # adjust beta1 to momentum
-    # else:
-    optimizer = optim.SGD(params, lr=lr, momentum=momnetum, weight_decay=5e-4)
-    # and a learning rate scheduler
-    # lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-    #                                                step_size=7,
-    #                                                gamma=0.1)
-    torch.manual_seed(999999)
-    start = time.time()
-    print('Using {} device'.format(device))
-    flogs.write('Using {} device'.format(device)+'\n')
-    stepiters = 0
-    criterion = torch.nn.CrossEntropyLoss()
-    pre = -999999
-    for epoch in range(num_epochs):
-        print('\nEpoch {}/{}'.format(epoch, num_epochs))
-        flogs.write('Epoch {}/{}'.format(epoch, num_epochs)+'\n')
-        print('-'*100)
-        running_loss = 0
-        if epoch<nowepoch:
-            stepiters += len(trainloader)
-            continue
-        model.train()
-        count = 0
-        print("length trainloader is: ", len(trainloader))
-        train_acc = 0
-        train_all = 0
-        for i, (image, label) in enumerate(trainloader):
-            stepiters += 1
-            if stepiters<alliters:
-                continue
+
+    weight = []
+    count = 0
+    weightsepa = []
+    for m in model.modules():
+        if isinstance(m, torch.nn.Conv2d):
+            w = m.weight.data.clone().detach().numpy() #out channel, in channel, h, w
+            out_channel = w.shape[0]
+            w_per_channel = np.reshape(w, (out_channel, -1))
+            w_per_layer = np.reshape(w, (-1))
+            print(w_per_channel.shape, w_per_layer.shape)
+            weight.append(w_per_layer)
+            weightsepa.extend(w_per_channel)
+            print(len(weightsepa[-1]))
             count += 1
-            lr = adjust_lr(optimizer, stepiters, epoch) #
-            optimizer.zero_grad()
-            image = image.to(device)
-            label = label.to(device)
-            outputs = model(image)
-            _, predict = torch.max(outputs, 1)
-            train_acc += (predict==label).sum()
-            train_all += len(label)
-            train_Acc = train_acc/train_all
+    
+    print(len(weightsepa[11]))
+    plt.hist(weightsepa[11], bins=100)
+    plt.title("all weights parameters")
+    plt.ylabel('numbers')
+    plt.xlabel("weights")
+    plt.show()
 
-            loss = criterion(outputs, label)
-            loss.backward()
+    # plt.figure(figsize=(1620,1620))
+    fig, axs = plt.subplots(3, 3)
+    for i in range(3):
+        for j in range(3):
+            axs[i, j].hist(weight[i+j], bins=100)
+            # axs[i, j].set_title("weights of layer %d"%(i+j+1))
 
-            #LSQplus V1论文原版的实现，在前几个的iters使用MSE公式update其s和beta
-            if LSQplus and version=='V1' and not Floatmodel and stepiters<plusV1_inititers and epoch==0:
-                print(stepiters, ': update_LSQplus_activation_Scalebeta')
-                model = update_LSQplus_activation_Scalebeta(model)
-            optimizer.step()
-            # statistics
-            running_loss += loss.item()
-            epoch_loss = running_loss / count
-            logword = 'epoch: {}, iteration: {}, alliters: {}, lr: {}, loss: {:.3f}, avgloss: {:.3f}, train_Acc: {:.3f}'.format(
-                epoch, i+1, stepiters, optimizer.state_dict()['param_groups'][0]['lr'], loss.item(), epoch_loss, train_Acc)
-            if i%showstep==0:
-                print(logword)
-                flogs.write(logword+'\n')
-                flogs.flush()
-            savestate = {'state_dict':model.state_dict(),\
-                        'iteration':i,\
-                        'alliters':stepiters,\
-                        "lr":lr,\
-                        'nowepoch':epoch}
-        # prepare to count predictions for each class
-        correct_pred = {classname: 0 for classname in classes}
-        total_pred = {classname: 0 for classname in classes}
+    plt.show()
 
-        # again no gradients needed
-        if epoch%3==0 and epoch>nowepoch:
-            print('validation of testes')
-            with torch.no_grad():
-                count = 0
-                print('length of testloader: ', len(testloader))
-                for data in testloader:
-                    count += 1
-                    images, labels = data
-                    images = images.to(device)
-                    labels = labels.to(device)
-                    outputs = model(images)
-                    # if count==100:
-                    #     break
-                    _, predictions = torch.max(outputs, 1)
-                    # collect the correct predictions for each class
-                    for label, prediction in zip(labels, predictions):
-                        if label == prediction:
-                            correct_pred[classes[label]] += 1
-                        total_pred[classes[label]] += 1
+    bn = []
+    count = 0
+    bnsepa = []
+    for m in model.modules():
+        if isinstance(m, torch.nn.BatchNorm2d):
+            size = m.weight.data.shape[0]
+            gammas = list(m.weight.data.clone().detach().numpy())
+            bn.extend(gammas)
+            bnsepa.append(gammas)
+            print(len(bnsepa[-1]))
+            count += 1
+    
+    plt.hist(bn, bins=100)
+    plt.ylabel('numbers')
+    plt.xlabel("γ")
+    plt.show()
 
-            # print accuracy for each class
-            correctall = 0
-            alltest = 0
-            for classname, correct_count in correct_pred.items():
-                accuracy = 100 * float(correct_count) / total_pred[classname]
-                print("Validation Accuracy for class {:5s} is: {:.1f} %".format(classname,
-                                                            accuracy))
-                correctall += correct_count
-                alltest += total_pred[classname]
-                flogs.write("Accuracy for class {:5s} is: {:.1f} %".format(classname, accuracy)+'\n')
-            flogs.flush()
-            Accuracy = round(100 * float(correctall)/alltest, 3)
-            print("Accuracy all is: {:.1f}".format(Accuracy))
+    # bn.sort()
+    plt.plot(np.arange(len(bn)), bn)
+    plt.title("resnet18 BN γ parameters γ*x+β")
+    plt.ylabel("no sorted γ")
+    plt.xlabel("indexs")
+    plt.show()
 
-            # lr_scheduler.step()
-            iteration=0
-            try:
-                if epoch>nowepoch and Accuracy>pre:
-                    torch.save(savestate, os.path.join(savepath, prefix+'_models_{}_{}_{}_{:.3f}_{}_{}.pth'.format(
-                        lr, epoch, stepiters, loss.item(),Accuracy,tim)))
-                pre = Accuracy
-            except:
-                pass
-        # evaluate(model, dataloader_test, device = device)
-    timeused  = time.time() - start
-    print('Training complete in {:.0f}m {:.0f}s'.format(timeused//60, timeused%60))
-    flogs.close()
+    bn.sort()
+    plt.plot(np.arange(len(bn)), bn)
+    plt.title("resnet18 BN γ parameters γ*x+β")
+    plt.ylabel("sorted γ")
+    plt.xlabel("indexs")
+    plt.show()
+
+    tmp9 = bnsepa[2]
+    plt.plot(np.arange(len(tmp9)), tmp9)
+    plt.title("resnet18 BN γ parameters γ*x+β")
+    plt.ylabel("no sorted γ")
+    plt.xlabel("3th layer")
+    plt.show()
+
+    tmp9 = bnsepa[2]
+    tmp9.sort()
+    plt.plot(np.arange(len(tmp9)), tmp9)
+    plt.title("resnet18 BN γ parameters γ*x+β")
+    plt.ylabel("sorted γ")
+    plt.xlabel("3th layer")
+    plt.show()
+
+    tmp9 = bnsepa[17]
+    plt.plot(np.arange(len(tmp9)), tmp9)
+    plt.title("resnet18 BN γ parameters γ*x+β")
+    plt.ylabel("no sorted γ")
+    plt.xlabel("18th layer")
+    plt.show()
+    
+    tmp9 = bnsepa[17]
+    tmp9.sort()
+    plt.plot(np.arange(len(tmp9)), tmp9)
+    plt.title("resnet18 BN γ parameters γ*x+β")
+    plt.ylabel("sorted γ")
+    plt.xlabel("18th layer")
+    plt.show()
+
+    plt.close()
+    print(len(bnsepa))
+    print(bn[:30])
+    print(bn[-30:])
 
 if __name__ == '__main__':
     trainer()

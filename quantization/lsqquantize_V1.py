@@ -112,12 +112,12 @@ batch of activations, respectively
             self.g = 1.0/math.sqrt(activation.numel() * self.Qp)
             self.s = torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
             self.init_state += 1
-        elif self.init_state<self.batch_init:
-            self.s = 0.9*self.s + 0.1**torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
-            self.init_state += 1
-        elif self.init_state==self.batch_init:
-            self.s = torch.nn.Parameter(self.s)
-            self.init_state += 1
+        # elif self.init_state<self.batch_init:
+        #     self.s = 0.9*self.s + 0.1**torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
+        #     self.init_state += 1
+        # elif self.init_state==self.batch_init:
+        #     self.s = torch.nn.Parameter(self.s)
+        #     self.init_state += 1
         if self.a_bits == 32:
             output = activation
         elif self.a_bits == 1:
