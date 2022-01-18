@@ -16,7 +16,7 @@ Dataset used for training is CIFAR10 and model used is Resnet18 revised<br>
 lsqplus_quantize_V1.py: initialize s、beta of activation quantization according to LSQ+[arxiv.org/abs/2004.09576](https://arxiv.org/abs/2004.09576)<br><br>
 lsqplus_quantize_V2.py: initialize s、beta of activation quantization according to min max values<br><br>
 lsqquantize_V1.py：initialize s of activation quantization according to LSQ [arxiv.org/abs/1902.08153](https://arxiv.org/abs/1902.08153)<br><br>
-lsqquantize_V2.py: initialize s of activation quantization = 1<br>
+lsqquantize_V2.py: initialize s of activation quantization = 1<br><br>
 lsqplus_quantize_V2.py has the best result when use cifar10 dataset<br>
 
 ## The Train Results 
