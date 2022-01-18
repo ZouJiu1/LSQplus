@@ -97,7 +97,8 @@ class LSQActivationQuantizer(nn.Module):
             # signed weight/activation is quantized to [-2^(b-1), 2^(b-1)-1]
             self.Qn = - 2 ** (self.a_bits - 1)
             self.Qp = 2 ** (self.a_bits - 1) - 1
-        # self.s = torch.nn.Parameter(torch.ones(1))
+        self.s = torch.nn.Parameter(torch.ones(1), requires_grad=True)
+        # self.register_parameter('Ascale', self.s)
         self.init_state = 0
 
     # 量化/反量化
@@ -110,20 +111,21 @@ batch of activations, respectively
         #V1
         if self.init_state==0:
             self.g = 1.0/math.sqrt(activation.numel() * self.Qp)
-            self.s = torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
+            self.s.data = torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
             self.init_state += 1
-        # elif self.init_state<self.batch_init:
-        #     self.s = 0.9*self.s + 0.1**torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
-        #     self.init_state += 1
-        # elif self.init_state==self.batch_init:
-        #     self.s = torch.nn.Parameter(self.s)
-        #     self.init_state += 1
+        elif self.init_state<self.batch_init:
+            self.s.data = 0.9*self.s.data + 0.1**torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
+            self.init_state += 1
+        elif self.init_state==self.batch_init:
+            # self.s = torch.nn.Parameter(self.s)
+            self.init_state += 1
         if self.a_bits == 32:
             output = activation
         elif self.a_bits == 1:
             print('！Binary quantization is not supported ！')
             assert self.a_bits != 1
         else:
+            # print(self.s, self.g)
             q_a = FunLSQ.apply(activation, self.s, self.g, self.Qn, self.Qp)
 
             # alpha = grad_scale(self.s, g)
@@ -146,6 +148,8 @@ class LSQWeightQuantizer(nn.Module):
             self.Qn = - 2 ** (w_bits - 1)
             self.Qp = 2 ** (w_bits - 1) - 1
         self.per_channel = per_channel
+        self.s = torch.nn.Parameter(torch.ones(1), requires_grad=True)
+        # self.register_parameter('Wscale', self.s)
         self.init_state = 0
 
     # 量化/反量化
@@ -154,19 +158,19 @@ class LSQWeightQuantizer(nn.Module):
             self.g = 1.0/math.sqrt(weight.numel() * self.Qp)
             if self.per_channel:
                 weight_tmp = weight.detach().contiguous().view(weight.size()[0], -1)
-                self.s = torch.mean(torch.abs(weight_tmp), dim=1)*2/(math.sqrt(self.Qp))
+                self.s.data = torch.mean(torch.abs(weight_tmp), dim=1)*2/(math.sqrt(self.Qp))
             else:
-                self.s = torch.mean(torch.abs(weight.detach()))*2/(math.sqrt(self.Qp))
+                self.s.data = torch.mean(torch.abs(weight.detach()))*2/(math.sqrt(self.Qp))
             self.init_state += 1
         elif self.init_state<self.batch_init:
             if self.per_channel:
                 weight_tmp = weight.detach().contiguous().view(weight.size()[0], -1)
-                self.s = 0.9*self.s + 0.1*torch.mean(torch.abs(weight_tmp), dim=1)*2/(math.sqrt(self.Qp))
+                self.s.data = 0.9*self.s.data + 0.1*torch.mean(torch.abs(weight_tmp), dim=1)*2/(math.sqrt(self.Qp))
             else:
-                self.s = 0.9*self.s + 0.1*torch.mean(torch.abs(weight.detach()))*2/(math.sqrt(self.Qp))
+                self.s.data = 0.9*self.s.data + 0.1*torch.mean(torch.abs(weight.detach()))*2/(math.sqrt(self.Qp))
             self.init_state += 1
         elif self.init_state==self.batch_init:
-            self.s = torch.nn.Parameter(self.s)
+            # self.s = torch.nn.Parameter(self.s)
             self.init_state += 1
         if self.w_bits == 32:
             output = weight
@@ -174,6 +178,7 @@ class LSQWeightQuantizer(nn.Module):
             print('！Binary quantization is not supported ！')
             assert self.w_bits != 1
         else:
+            # print(self.s, self.g)
             w_q = FunLSQ.apply(weight, self.s, self.g, self.Qn, self.Qp, self.per_channel)
 
             # alpha = grad_scale(self.s, g)

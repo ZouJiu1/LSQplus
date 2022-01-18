@@ -28,11 +28,11 @@ def adjust_lr(optimizer, stepiters, epoch):
     #     lr = 0.001
     # elif stepiters < 3000:
     #     lr = 0.001
-    if epoch <= 30:
+    if epoch <= 31:
         lr = 0.1
-    elif epoch <= 46:
+    elif epoch <= 61:
         lr = 0.01
-    elif epoch <= 55:
+    elif epoch <= 81:
         lr = 0.001
     else:
         lr = 0.0001
@@ -49,8 +49,8 @@ def trainer():
     batch_size = 128
     num_epochs = 112
     Floatmodel = False    #QAT or float-32 train   False or True
-    LSQplus = True       #LSQ+ or LSQ    True or False
-    version = 'V2'
+    LSQplus = False       #LSQ+ or LSQ    True or False
+    version = 'V1'
     scratch = True       #从最开始训练，不是finetuning， 若=False就是finetuning
     showstep = 31
     #LSQPlusActivationQuantizer里的self.beta初始值要关注

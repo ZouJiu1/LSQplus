@@ -119,9 +119,9 @@ class LSQPlusActivationQuantizer(nn.Module):
             # signed weight/activation is quantized to [-2^(b-1), 2^(b-1)-1]
             self.Qn = - 2 ** (self.a_bits - 1)
             self.Qp = 2 ** (self.a_bits - 1) - 1
-        self.s = torch.nn.Parameter(torch.ones(1))
+        self.s = torch.nn.Parameter(torch.ones(1), requires_grad=True)
         # self.beta = torch.nn.Parameter(torch.tensor([float(0)]))
-        self.beta = torch.nn.Parameter(torch.tensor([float(-1e-9)]))
+        self.beta = torch.nn.Parameter(torch.tensor([float(-1e-9)]), requires_grad=True)
         self.init_state = 0
 
     # 量化/反量化
@@ -158,6 +158,8 @@ class LSQPlusWeightQuantizer(nn.Module):
             self.Qp = 2 ** (w_bits - 1) - 1
         self.per_channel = per_channel
         self.init_state = 0
+        self.s = torch.nn.Parameter(torch.ones(1), requires_grad=True)
+        # self.beta = torch.nn.Parameter(torch.ones(0), requires_grad=True)
 
     # 量化/反量化
     def forward(self, weight):
@@ -168,12 +170,12 @@ class LSQPlusWeightQuantizer(nn.Module):
                 weight_tmp = weight.detach().contiguous().view(weight.size()[0], -1)
                 mean = torch.mean(weight_tmp, dim=1)
                 std = torch.std(weight_tmp, dim=1)
-                self.s, _ = torch.max(torch.stack([torch.abs(mean-3*std), torch.abs(mean + 3*std)]), dim=0)
-                self.s = self.s/self.div
+                self.s.data, _ = torch.max(torch.stack([torch.abs(mean-3*std), torch.abs(mean + 3*std)]), dim=0)
+                self.s.data = self.s.data/self.div
             else:
                 mean = torch.mean(weight.detach())
                 std = torch.std(weight.detach())
-                self.s = max([torch.abs(mean-3*std), torch.abs(mean + 3*std)])/self.div
+                self.s.data = max([torch.abs(mean-3*std), torch.abs(mean + 3*std)])/self.div
             self.init_state += 1
         elif self.init_state<self.batch_init:
             self.div = 2**self.w_bits-1
@@ -181,15 +183,15 @@ class LSQPlusWeightQuantizer(nn.Module):
                 weight_tmp = weight.detach().contiguous().view(weight.size()[0], -1)
                 mean = torch.mean(weight_tmp, dim=1)
                 std = torch.std(weight_tmp, dim=1)
-                self.s, _ = torch.max(torch.stack([torch.abs(mean-3*std), torch.abs(mean + 3*std)]), dim=0)
-                self.s =  self.s*0.9 + 0.1*self.s/self.div
+                self.s.data, _ = torch.max(torch.stack([torch.abs(mean-3*std), torch.abs(mean + 3*std)]), dim=0)
+                self.s.data =  self.s.data*0.9 + 0.1*self.s.data/self.div
             else:
                 mean = torch.mean(weight.detach())
                 std = torch.std(weight.detach())
-                self.s = self.s*0.9 + 0.1*max([torch.abs(mean-3*std), torch.abs(mean + 3*std)])/self.div
+                self.s.data = self.s.data*0.9 + 0.1*max([torch.abs(mean-3*std), torch.abs(mean + 3*std)])/self.div
             self.init_state += 1
         elif self.init_state==self.batch_init:
-            self.s = torch.nn.Parameter(self.s)
+            # self.s = torch.nn.Parameter(self.s)
             self.init_state += 1
 
 

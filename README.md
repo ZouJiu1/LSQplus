@@ -20,14 +20,14 @@ lsqquantize_V2.py: initialize s of activation quantization = 1<br><br>
 | version | weight per_channel | learning rate | A s initial | A beta initial | best epoch | Accuracy | models
 | ------ | --------- | ------ | ------ | ------ | ------ | ------ | ------ |
 | Float 32bit | - | <=66 0.1<br><=86 0.01<br><=99 0.001<br><=112 0.0001 | - | - | 112 | 92.6 | [download](https://share.weiyun.com/g7P6cL23) |
-| lsqplus_quantize_V1 | × | <=30 0.1<br><=46 0.01<br><=60 0.001<br><=70 0.0001 | 1 | -1e-9 | 69 | 90.1 | [download](https://share.weiyun.com/HRKnuJ9H) |
-| lsqplus_quantize_V2 | × | <=9 0.1<br><=12 0.01 | - | - | 12 | 91.0 | [download](https://share.weiyun.com/RvrPTeEQ) |
-| lsqplus_quantize_V1 | ✔ | working | to | imporve | - | - | [download](https://share.weiyun.com/oETxlkYc) |
-| lsqplus_quantize_V2 | ✔ | <=9 0.1<br><=21 0.01<br><=33 0.001<br><=46 0.0001 | - | - | 33 | 91.46 | [download](https://share.weiyun.com/ZUTnyZJd) |
-| lsqquantize_V1 | × | working | to | imporve | - | - | [download](https://share.weiyun.com/FOiQJ6Xj) |
-| lsqquantize_V2 | × | <=31 0.1<br><=61 0.01<br><=81 0.001<br><100 0.0001 | - | - | 72 | 91.76 | [download](https://share.weiyun.com/4ANtOj2G) |
-| lsqquantize_V1 | ✔ | working | to | imporve | - | - | [download](https://share.weiyun.com/scyVhAzN) |
-| lsqquantize_V2 | ✔ | <=31 0.1<br><=61 0.01<br><=81 0.001<br><100 0.0001 | - | - | 99 | 91.37 | [download](https://share.weiyun.com/01uXhQGw) |
+| lsqplus_quantize_V1 | × | <=31 0.1<br><=61 0.01<br><=81 0.001<br><112 0.0001 | 1 | -1e-9 | 90 | 90.3 | [download](https://share.weiyun.com/Cny7NNZn) |
+| lsqplus_quantize_V2 | × | as before | - | - | 87 | 92.8 | [download](https://share.weiyun.com/B228P2ha) |
+| lsqplus_quantize_V1 | ✔ | as before | - | - | 96 | 91.19  | [download](https://share.weiyun.com/Amgi2b6Q) |
+| lsqplus_quantize_V2 | ✔ | as before | - | - | 69 | 92.8 | [download](https://share.weiyun.com/XHy57hmw) |
+| lsqquantize_V1 | × | as before | - | - | 102 | 91.89 | [download](https://share.weiyun.com/Rpsevh5f) |
+| lsqquantize_V2 | × | as before | - | - | 69 | 91.82 | [download](https://share.weiyun.com/xOQLjvTK) |
+| lsqquantize_V1 | ✔ | as before | - | - | 108 | 91.29 | [download](https://share.weiyun.com/xkL9JBir) |
+| lsqquantize_V2 | ✔ | as before | - | - | 72 | 91.72 | [download](https://share.weiyun.com/eQZbF3z3) |
 <br>
 A represent activation, I use moving average method to initialize s and beta.<br><br>
 
