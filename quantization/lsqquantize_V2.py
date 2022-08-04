@@ -20,7 +20,7 @@ class Round(Function):
 
     @staticmethod
     def backward(self, grad_output):
-        grad_input = grad_outputorch.clone()
+        grad_input = grad_output.clone()
         return grad_input
 
 class FunLSQ(Function):
