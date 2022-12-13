@@ -210,20 +210,20 @@ class LSQPlusWeightQuantizer(nn.Module):
 def update_LSQplus_activation_Scalebeta(model):
     for name, child in model.named_children():
         if isinstance(child, (QuantConv2d, QuantConvTranspose2d, QuantLinear)):
-            weight = child.weight.data
+            #weight = child.weight.data
             s = child.activation_quantizer.s.data
             beta = child.activation_quantizer.beta.data
             Qn = child.activation_quantizer.Qn
             Qp = child.activation_quantizer.Qp
             g = child.activation_quantizer.g
             # print('before: ', name, child.activation_quantizer.s.grad.data, child.activation_quantizer.beta.grad.data, s, beta)
-            q_w = (weight - beta) / s
-            # print(q_w)
-            smaller = (q_w < Qn).float() #bool值转浮点值，1.0或者0.0
-            bigger = (q_w > Qp).float() #bool值转浮点值，1.0或者0.0
+            q_input = (child.input - beta) / s   //論文第三頁公式(3)
+            # print(q_input)
+            smaller = (q_input < Qn).float() #bool值转浮点值，1.0或者0.0
+            bigger = (q_input > Qp).float() #bool值转浮点值，1.0或者0.0
             between = 1.0 - smaller -bigger #得到位于量化区间的index
             grad_alpha = ((smaller * Qn + bigger * Qp + 
-                           between * Round.apply(q_w) - between * q_w) * g).sum().unsqueeze(dim=0)
+                           between * Round.apply(q_input) - between * q_input) * g).sum().unsqueeze(dim=0)
             grad_beta = ((smaller + bigger) * g).sum().unsqueeze(dim=0)
             # print('grad_beta: ',grad_beta,g, smaller.sum(), bigger.sum(), between.sum(),Qn, Qp)
             child.activation_quantizer.s.grad.data.add_(g*(2*(child.quant_input-child.input)*grad_alpha).sum().unsqueeze(dim=0))
