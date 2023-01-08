@@ -13,9 +13,9 @@ You should train 32-bit float model firstly, then you can finetune a low bit-wid
 Dataset used for training is CIFAR10 and model used is Resnet18 revised<br>
 
 ## Version introduction
-lsqplus_quantize_V1.py: initialize s、beta of activation quantization according to LSQ+[arxiv.org/abs/2004.09576](https://arxiv.org/abs/2004.09576)<br><br>
+lsqplus_quantize_V1.py: initialize s、beta of activation quantization according to LSQ+ [LSQ+: Improving low-bit quantization through learnable offsets and better initialization](https://arxiv.org/abs/2004.09576)<br><br>
 lsqplus_quantize_V2.py: initialize s、beta of activation quantization according to min max values<br><br>
-lsqquantize_V1.py：initialize s of activation quantization according to LSQ [arxiv.org/abs/1902.08153](https://arxiv.org/abs/1902.08153)<br><br>
+lsqquantize_V1.py：initialize s of activation quantization according to LSQ [Learned Step Size Quantization](https://arxiv.org/abs/1902.08153)<br><br>
 lsqquantize_V2.py: initialize s of activation quantization = 1<br><br>
 lsqplus_quantize_V2.py has the best result when use cifar10 dataset<br>
 
