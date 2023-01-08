@@ -194,7 +194,6 @@ class LSQPlusWeightQuantizer(nn.Module):
             # self.s = torch.nn.Parameter(self.s)
             self.init_state += 1
 
-
         if self.w_bits == 32:
             output = weight
         elif self.w_bits == 1:

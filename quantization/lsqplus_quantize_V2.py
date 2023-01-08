@@ -224,7 +224,6 @@ batch of activations, respectively
             # w_q = Round.apply((weight/alpha).clamp(Qn, Qp)) * alpha
         return w_q
 
-
 class QuantConv2d(nn.Conv2d):
     def __init__(self,
                  in_channels,
