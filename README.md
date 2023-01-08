@@ -2,6 +2,10 @@
 LSQ+ net or LSQplus net and LSQ net <br>
 
 ## commit log<br>
+`
+20230108
+`
+add Lsq_v3, and Dorefa and Pact, [https://github.com/ZouJiu1/Lsq_v3_Dorefa_Pact](https://github.com/ZouJiu1/Lsq_v3_Dorefa_Pact)<br>
 add torch.nn.Parameter .data, retrain models 18-01-2022<br>
 
 I'm not the author, I just complish an unofficial implementation of LSQ+ or LSQplus and LSQ，the origin paper you can find LSQ+ here [arxiv.org/abs/2004.09576](https://arxiv.org/abs/2004.09576) and LSQ here [arxiv.org/abs/1902.08153](https://arxiv.org/abs/1902.08153).<br>
