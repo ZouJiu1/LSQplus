@@ -32,12 +32,12 @@ class FunLSQ(Function):
             weight = weight.contiguous().view(weight.size()[0], -1)
             weight = torch.transpose(weight, 0, 1)
             alpha = torch.broadcast_to(alpha, weight.size())
-            w_q = Round.apply(torch.div(weight, alpha)).clamp(Qn, Qp)
+            w_q = Round.apply(torch.div(weight, alpha).clamp(Qn, Qp))
             w_q = w_q * alpha
             w_q = torch.transpose(w_q, 0, 1)
             w_q = w_q.contiguous().view(sizes)
         else:
-            w_q = Round.apply(torch.div(weight, alpha)).clamp(Qn, Qp)
+            w_q = Round.apply(torch.div(weight, alpha).clamp(Qn, Qp))
             w_q = w_q * alpha
         return w_q
 
@@ -98,6 +98,7 @@ class LSQActivationQuantizer(nn.Module):
             self.Qn = - 2 ** (self.a_bits - 1)
             self.Qp = 2 ** (self.a_bits - 1) - 1
         self.s = torch.nn.Parameter(torch.ones(1), requires_grad=True)
+        # self.s = torch.nn.Parameter(torch.ones(0.01), requires_grad=True)
         # self.register_parameter('Ascale', self.s)
         self.init_state = 0
 
@@ -114,7 +115,7 @@ batch of activations, respectively
             self.s.data = torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
             self.init_state += 1
         elif self.init_state<self.batch_init:
-            self.s.data = 0.9*self.s.data + 0.1**torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
+            self.s.data = 0.9*self.s.data + 0.1*torch.mean(torch.abs(activation.detach()))*2/(math.sqrt(self.Qp))
             self.init_state += 1
         elif self.init_state==self.batch_init:
             # self.s = torch.nn.Parameter(self.s)

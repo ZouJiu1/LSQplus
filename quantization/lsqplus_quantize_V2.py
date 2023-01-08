@@ -12,7 +12,7 @@ class ALSQPlus(Function):
         # assert alpha > 0, "alpha={}".format(alpha)
         ctx.save_for_backward(weight, alpha, beta)
         ctx.other = g, Qn, Qp
-        w_q = Round.apply(torch.div((weight - beta), alpha)).clamp(Qn, Qp)
+        w_q = Round.apply(torch.div((weight - beta), alpha).clamp(Qn, Qp))
         w_q = w_q * alpha + beta
         return w_q
 
@@ -43,12 +43,12 @@ class WLSQPlus(Function):
             weight = weight.contiguous().view(weight.size()[0], -1)
             weight = torch.transpose(weight, 0, 1)
             alpha = torch.broadcast_to(alpha, weight.size())
-            w_q = Round.apply(torch.div(weight, alpha)).clamp(Qn, Qp)
+            w_q = Round.apply(torch.div(weight, alpha).clamp(Qn, Qp))
             w_q = w_q * alpha
             w_q = torch.transpose(w_q, 0, 1)
             w_q = w_q.contiguous().view(sizes)
         else:
-            w_q = Round.apply(torch.div(weight, alpha)).clamp(Qn, Qp)
+            w_q = Round.apply(torch.div(weight, alpha).clamp(Qn, Qp))
             w_q = w_q * alpha 
         return w_q
 
