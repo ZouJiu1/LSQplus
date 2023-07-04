@@ -28,15 +28,15 @@ lsqplus_quantize_V2.py has the best result when use cifar10 dataset<br>
 ### For the below table all set a_bit=8, w_bit=8
 | version | weight per_channel | learning rate | A s initial | A beta initial | best epoch | Accuracy | models
 | ------ | --------- | ------ | ------ | ------ | ------ | ------ | ------ |
-| Float 32bit | - | <=66 0.1<br><=86 0.01<br><=99 0.001<br><=112 0.0001 | - | - | 112 | 92.6 | [download](https://share.weiyun.com/g7P6cL23) |
-| lsqplus_quantize_V1 | × | <=31 0.1<br><=61 0.01<br><=81 0.001<br><112 0.0001 | 1 | -1e-9 | 90 | 90.3 | [download](https://share.weiyun.com/Cny7NNZn) |
-| lsqplus_quantize_V2 | × | as before | - | - | 87 | 92.8 | [download](https://share.weiyun.com/B228P2ha) |
-| lsqplus_quantize_V1 | ✔ | as before | - | - | 96 | 91.19  | [download](https://share.weiyun.com/Amgi2b6Q) |
-| lsqplus_quantize_V2 | ✔ | as before | - | - | 69 | 92.8 | [download](https://share.weiyun.com/XHy57hmw) |
-| lsqquantize_V1 | × | as before | - | - | 102 | 91.89 | [download](https://share.weiyun.com/Rpsevh5f) |
-| lsqquantize_V2 | × | as before | - | - | 69 | 91.82 | [download](https://share.weiyun.com/xOQLjvTK) |
-| lsqquantize_V1 | ✔ | as before | - | - | 108 | 91.29 | [download](https://share.weiyun.com/xkL9JBir) |
-| lsqquantize_V2 | ✔ | as before | - | - | 72 | 91.72 | [download](https://share.weiyun.com/eQZbF3z3) |
+| Float 32bit | - | <=66 0.1<br><=86 0.01<br><=99 0.001<br><=112 0.0001 | - | - | 112 | 92.6 | [https://www.aliyundrive.com/s/6B2AZ45fFjx](https://www.aliyundrive.com/s/6B2AZ45fFjx) |
+| lsqplus_quantize_V1 | × | <=31 0.1<br><=61 0.01<br><=81 0.001<br><112 0.0001 | 1 | -1e-9 | 90 | 90.3 | [https://www.aliyundrive.com/s/FNZRhoTe8uW](https://www.aliyundrive.com/s/FNZRhoTe8uW) |
+| lsqplus_quantize_V2 | × | as before | - | - | 87 | 92.8 | [https://www.aliyundrive.com/s/WDH3ZnEa7vy](https://www.aliyundrive.com/s/WDH3ZnEa7vy) |
+| lsqplus_quantize_V1 | ✔ | as before | - | - | 96 | 91.19  | [https://www.aliyundrive.com/s/JATsi4vdurp](https://www.aliyundrive.com/s/JATsi4vdurp) |
+| lsqplus_quantize_V2 | ✔ | as before | - | - | 69 | 92.8 | [https://www.aliyundrive.com/s/LRWHaBLQGWc](https://www.aliyundrive.com/s/LRWHaBLQGWc) |
+| lsqquantize_V1 | × | as before | - | - | 102 | 91.89 | [https://www.aliyundrive.com/s/nR1KZZRuB23](https://www.aliyundrive.com/s/nR1KZZRuB23) |
+| lsqquantize_V2 | × | as before | - | - | 69 | 91.82 | [https://www.aliyundrive.com/s/7fjmViqUvh4](https://www.aliyundrive.com/s/7fjmViqUvh4) |
+| lsqquantize_V1 | ✔ | as before | - | - | 108 | 91.29 | [https://www.aliyundrive.com/s/](https://www.aliyundrive.com/s/PX84qGorVxY) |
+| lsqquantize_V2 | ✔ | as before | - | - | 72 | 91.72 | [https://www.aliyundrive.com/s/7nGvMVZcKp7](https://www.aliyundrive.com/s/7nGvMVZcKp7) |
 <br>
 A represent activation, I use moving average method to initialize s and beta.<br><br>
 
