@@ -38,6 +38,7 @@ lsqplus_quantize_V2.py has the best result when use cifar10 dataset<br>
 | lsqquantize_V1 | ✔ | as before | - | - | 108 | 91.29 | [https://www.aliyundrive.com/s/](https://www.aliyundrive.com/s/PX84qGorVxY) |
 | lsqquantize_V2 | ✔ | as before | - | - | 72 | 91.72 | [https://www.aliyundrive.com/s/7nGvMVZcKp7](https://www.aliyundrive.com/s/7nGvMVZcKp7) |
 <br>
+all [https://www.aliyundrive.com/s/hng9XsvhYru](https://www.aliyundrive.com/s/hng9XsvhYru)<br>
 A represent activation, I use moving average method to initialize s and beta.<br><br>
 
 LEARNED STEP SIZE QUANTIZATION<br>
