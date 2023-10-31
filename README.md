@@ -5,7 +5,7 @@ LSQ+ net or LSQplus net and LSQ net <br>
 `
 2023-01-08
 `
-add Lsq_v3, and Dorefa and Pact, [https://github.com/ZouJiu1/Lsq_v3_Dorefa_Pact](https://github.com/ZouJiu1/Lsq_v3_Dorefa_Pact)<br>
+Dorefa and Pact, [https://github.com/ZouJiu1/Dorefa_Pact](https://github.com/ZouJiu1/Dorefa_Pact)<br>
 --------------------------------------------------------------------------------------------------------------<br>
 add torch.nn.Parameter .data, retrain models 18-01-2022<br>
 
