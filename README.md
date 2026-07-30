@@ -2,6 +2,11 @@
 LSQ+ net or LSQplus net and LSQ net <br>
 
 ## commit log<br>
+
+`20260730`
+
+suggestion: [https://github.com/modeltc/mqbench](https://github.com/modeltc/mqbench) for QAT, PTQ
+
 `
 2023-01-08
 `
