@@ -6,6 +6,7 @@ LSQ+ net or LSQplus net and LSQ net <br>
 `20260730`
 
 [20260730] suggestion: [https://github.com/modeltc/mqbench](https://github.com/modeltc/mqbench) for QAT, PTQ
+
 [20260730] this repo just quantize the conv + linear, but actually in company or in NPU, you should quantize conv + linear + add + div + multiply + sub + concat + softmax + sigmoid + relu, and so on, so **mqbench** is a good choice.
 
 
