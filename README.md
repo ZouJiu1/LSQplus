@@ -9,14 +9,26 @@ LSQ+ net or LSQplus net and LSQ net <br>
 
 [20260730] this repo just quantize the conv + linear, but actually in company or in NPU, you should quantize conv + linear + add + div + multiply + sub + concat + softmax + sigmoid + relu, and so on, so **mqbench** is a good choice.
 
-or you can write below classes to replace ops "+ - * / concat softmax relu", and replace ops in your network with these classes
+[20260815] or you can write below classes to replace ops "+ - * / concat softmax relu ......", and replace ops in your network with these classes
 ```
 class QuantAdd(nn.Module):
-    def __init__(self,
-    def forward(self, input):
+    def __init__(self)
+        self.activation_quantizerA = LSQPlusActivationQuantizer(a_bits=a_bits, all_positive=all_positive,batch_init = batch_init)
+        self.activation_quantizerC = LSQPlusActivationQuantizer(a_bits=a_bits, all_positive=all_positive,batch_init = batch_init)
+    def forward(self, inputA, inputC):
+        A = self.activation_quantizerA(inputA)
+        C = self.activation_quantizerC(inputC)
+        return A + C
 class QuantDiv(nn.Module):
 class QuantMultiply(nn.Module):
 class QuantConcat(nn.Module):
+    def __init__(self)
+        self.activation_quantizerA = LSQPlusActivationQuantizer(a_bits=a_bits, all_positive=all_positive,batch_init = batch_init)
+        self.activation_quantizerC = LSQPlusActivationQuantizer(a_bits=a_bits, all_positive=all_positive,batch_init = batch_init)
+    def forward(self, inputA, inputC, d):
+        A = self.activation_quantizerA(inputA)
+        C = self.activation_quantizerC(inputC)
+        return torch.concat([A, C], dim = d)
 class QuantRelu(nn.Module):
 ......
 ```
