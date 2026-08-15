@@ -9,6 +9,18 @@ LSQ+ net or LSQplus net and LSQ net <br>
 
 [20260730] this repo just quantize the conv + linear, but actually in company or in NPU, you should quantize conv + linear + add + div + multiply + sub + concat + softmax + sigmoid + relu, and so on, so **mqbench** is a good choice.
 
+or you can write below classes to replace ops "+ - * / concat softmax relu", and replace ops in your network with these classes
+```
+class QuantAdd(nn.Module):
+    def __init__(self,
+    def forward(self, input):
+class QuantDiv(nn.Module):
+class QuantMultiply(nn.Module):
+class QuantConcat(nn.Module):
+class QuantRelu(nn.Module):
+......
+```
+
 
 `
 2023-01-08
