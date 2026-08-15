@@ -3,7 +3,8 @@ LSQ+ net or LSQplus net and LSQ net <br>
 
 ## commit log<br>
 
-[20260816] if you want to quantize ops like conv + linear + add + div + multiply + sub + concat + softmax + sigmoid + relu, and so on. You can write below classes to replace ops "+ - * / concat softmax relu ......", and replace ops in your network with these classes
+[20260816] if you want to quantize ops like conv + linear + add + div + multiply + sub + concat + softmax + sigmoid + relu, and so on. You can write below classes to replace ops "+ - * / concat softmax relu ......", and replace ops in your network with these classes, add these classes to file [quantization/lsqplus_quantize_V1.py](quantization/lsqplus_quantize_V1.py)
+
 ```
 class QuantAdd(nn.Module):
     def __init__(self)
