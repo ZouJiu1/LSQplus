@@ -137,6 +137,12 @@ class LSQPlusActivationQuantizer(nn.Module):
             if self.init_state==0:
                 self.g = 1.0/math.sqrt(activation.numel() * self.Qp)
                 self.init_state += 1
+            elif self.init_state < self.batch_init and self.training:
+                mina = activation.min()
+                self.beta.data = self.beta.data*0.9 + 0.1*(mina - self.s.data * self.Qn)
+                self.init_state += 1
+            elif self.init_state == self.batch_init and self.training:
+                self.init_state += 1
             q_a = ALSQPlus.apply(activation, self.s, self.g, self.Qn, self.Qp, self.beta)
             # print(self.s, self.beta)
         return q_a
