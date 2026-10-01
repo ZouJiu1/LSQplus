@@ -2,6 +2,7 @@
 LSQ+ net or LSQplus net and LSQ net <br>
 
 ## commit log<br>
+[20261001] [YOLO26-PTQ-QAT  https://github.com/ZouJiu1/YOLO26-PTQ-QAT](https://github.com/ZouJiu1/YOLO26-PTQ-QAT), float train, ptq, qat for yolo26 with all layers including conv linear, maxpool, silu, relu, concat, add, and so on.
 
 [20260816] if you want to quantize ops like conv + linear + add + div + multiply + sub + concat + softmax + sigmoid + relu, and so on. You can write below classes to replace ops "+ - * / concat softmax relu ......", and replace ops in your network with these classes, add these classes to file [quantization/lsqplus_quantize_V1.py](quantization/lsqplus_quantize_V1.py)
 
